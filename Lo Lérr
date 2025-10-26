@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lo Lérr – كنز العلم</title>
+
+<meta name="theme-color" content="#0B1D36">
+<link rel="manifest" href="manifest.json">
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter', sans-serif; }
+body {
+  background: linear-gradient(135deg, #0B1D36 0%, #1A3C6B 100%);
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:1rem;
+}
+h1 { color:#FFD700; text-align:center; margin-bottom:1rem; text-shadow: 1px 1px 5px rgba(0,0,0,0.5);}
+button { background:#FFD700; border:none; padding:0.5rem 1rem; margin:0.2rem; border-radius:8px; cursor:pointer; font-weight:bold; transition:0.3s; }
+button:hover { transform:scale(1.05); }
+select, input { padding:0.5rem; margin:0.3rem; border-radius:6px; border:none; outline:none; }
+.citation-card {
+  background:rgba(255, 215, 0,0.1);
+  padding:1rem;
+  margin:0.5rem 0;
+  border-left:4px solid #FFD700;
+  border-radius:6px;
+  position:relative;
+  animation: glow 2s infinite alternate;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+.citation-card p { margin-bottom:0.5rem; line-height:1.4rem; }
+@keyframes glow { 0% { box-shadow:0 0 5px #FFD700 inset; } 100% { box-shadow:0 0 20px #FFD700 inset; } }
+#filters { display:flex; flex-wrap:wrap; justify-content:center; margin-bottom:1rem; }
+#citation-container { width:100%; max-width:600px; }
+#jeu {
+  margin-top:2rem;
+  background:rgba(255,255,255,0.08);
+  padding:1rem;
+  border-radius:8px;
+  width:100%;
+  max-width:600px;
+  text-align:center;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+}
+input[type=text] { width:80%; }
+@media (max-width:600px){ button,input,select{width:100%; margin-bottom:0.5rem; } }
+</style>
+</head>
+<body>
+<h1>Lo Lérr – كنز العلم</h1>
+
+<div id="filters">
+  <select id="themeFilter">
+    <option value="all">Toutes catégories</option>
+    <option value="politique">Politique</option>
+    <option value="économique">Économique</option>
+    <option value="sociale">Sociale</option>
+    <option value="solidaire">Solidaire</option>
+    <option value="religieux">Religieux</option>
+    <option value="philosophie">Philosophie</option>
+    <option value="motivations">Motivations</option>
+  </select>
+  <select id="langFilter">
+    <option value="all">Toutes langues</option>
+    <option value="fr">Français</option>
+    <option value="ar">Arabe</option>
+    <option value="en">Anglais</option>
+    <option value="wo">Wolof</option>
+  </select>
+  <button onclick="showRandomCitation()">Citation du jour</button>
+</div>
+
+<div id="citation-container"></div>
+
+<div id="jeu">
+  <h2>Jeu du jour : Devine le thème !</h2>
+  <p id="jeuQuestion"></p>
+  <input type="text" id="jeuReponse" placeholder="Écris ta réponse ici">
+  <button onclick="verifierJeu()">Valider</button>
+  <p id="jeuResultat"></p>
+</div>
+
+<script>
+// --- PWA Service Worker registration ---
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('service-worker.js').then(function(reg){
+      console.log('ServiceWorker enregistré:', reg.scope);
+    }).catch(function(err){
+      console.log('Erreur ServiceWorker:', err);
+    });
+  });
+}
+
+// --- Données ---
+const themes = ["politique","économique","sociale","solidaire","religieux","philosophie","motivations"];
+const langues = ["fr","ar","en","wo"];
+const auteurs = ["Anonyme","Leader","Expert","Proverbe","Humaniste","Bokk Jikko"];
+let citations = [];
+
+const phrasesFr = [
+  "La connaissance est une lumière qui guide chaque pas de notre existence et éclaire notre esprit.",
+  "L'union des peuples est la force qui peut changer le monde et instaurer la justice pour tous.",
+  "La solidarité entre les êtres humains est la plus grande richesse de notre société.",
+  "Chaque action politique doit viser le bien commun et l'équité pour les générations futures.",
+  "La philosophie nous apprend à réfléchir avant d'agir et à comprendre le sens de la vie.",
+  "La motivation naît de la certitude que chaque effort apporte un apprentissage précieux.",
+  "L'économie, quand elle est bien dirigée, devient le moteur du développement durable."
+];
+
+for(let i=1;i<=10000;i++){
+  const theme = themes[Math.floor(Math.random()*themes.length)];
+  const langue = langues[Math.floor(Math.random()*langues.length)];
+  const auteur = auteurs[Math.floor(Math.random()*auteurs.length)];
+  let texte = phrasesFr[Math.floor(Math.random()*phrasesFr.length)];
+  texte = `Citation ${i} : ${texte}`;
+  citations.push({texte, langue, theme, auteur});
+}
+
+// --- Fonctions ---
+function afficherCitations(list){
+  const container = document.getElementById('citation-container');
+  container.innerHTML = '';
+  if(list.length === 0){ container.innerHTML="<p>Aucune citation trouvée.</p>"; return; }
+  list.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'citation-card';
+    card.innerHTML = `<p>${c.texte}</p><small>${c.auteur} | ${c.langue} | ${c.theme}</small>`;
+    const retourBtn = document.createElement('button');
+    retourBtn.innerText = 'Retour';
+    retourBtn.onclick = ()=>window.scrollTo({top:0,behavior:'smooth'});
+    card.appendChild(retourBtn);
+    container.appendChild(card);
+  });
+}
+
+document.getElementById('themeFilter').addEventListener('change', filterCitations);
+document.getElementById('langFilter').addEventListener('change', filterCitations);
+
+function filterCitations(){
+  const theme = document.getElementById('themeFilter').value;
+  const lang = document.getElementById('langFilter').value;
+  const filtered = citations.filter(c=>{
+    return (theme==='all'||c.theme===theme) && (lang==='all'||c.langue===lang);
+  });
+  afficherCitations(filtered.slice(0,50));
+}
+
+function showRandomCitation(){
+  const random = citations[Math.floor(Math.random()*citations.length)];
+  afficherCitations([random]);
+}
+
+function verifierJeu(){
+  const question = document.getElementById('jeuQuestion').innerText;
+  const reponse = document.getElementById('jeuReponse').value.trim().toLowerCase();
+  const themeCorrect = question.split(':')[1].trim().split(' ')[0];
+  const resultat = document.getElementById('jeuResultat');
+  if(reponse === themeCorrect.toLowerCase()){ resultat.innerText="Bravo ! 🎉"; }
+  else { resultat.innerText="Essaie encore !"; }
+}
+
+function initJeu(){
+  const sample = citations[Math.floor(Math.random()*citations.length)];
+  document.getElementById('jeuQuestion').innerText = `Devine le thème : ${sample.texte}`;
+}
+
+window.onload = function(){
+  afficherCitations(citations.slice(0,10));
+  initJeu();
+};
+</script>
+</body>
+</html>
