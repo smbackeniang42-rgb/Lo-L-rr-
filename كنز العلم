@@ -1,0 +1,472 @@
+<!-- ============================================================
+  FILE: index.html
+  Single-file frontend: Lo Lérr – كنز العلم
+  - Multi-page SPA (Accueil, Citations, À propos, Contact)
+  - Multilingue: français / العربية / english
+  - Dark theme (noir + doré), responsive, search, random quote
+  - Can be hosted as static site (Netlify, GitHub Pages, Vercel)
+  ============================================================ -->
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lo Lérr – كنز العلم</title>
+  <meta name="description" content="Lo Lérr — كنز العلم : citations, savoir et inspiration. Multilingue, mobile-friendly.">
+  <link rel="icon" href="data:," />
+  <style>
+    /* ---------- Basic reset & typography ---------- */
+    :root{
+      --bg:#0b0b0c;
+      --card:#0f1113;
+      --muted:#bdb6a8;
+      --gold:#d6b76f;
+      --accent:#e9dcc6;
+      --glass: rgba(255,255,255,0.04);
+      --radius:14px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color-scheme: dark;
+    }
+    *{box-sizing:border-box}
+    html,body,#app{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(214,183,111,0.05), transparent),
+                  linear-gradient(180deg, #050506 0%, var(--bg) 100%);
+      color:var(--accent);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:24px;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      gap:16px;
+    }
+
+    /* ---------- Container ---------- */
+    .container{
+      width:100%;
+      max-width:1100px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03));
+      border-radius:20px;
+      box-shadow: 0 10px 30px rgba(3,3,3,0.7);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      min-height:80vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar{
+      padding:22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.007));
+      border-right: 1px solid rgba(255,255,255,0.03);
+    }
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    .logo{
+      width:56px;height:56px;border-radius:12px;
+      background: linear-gradient(135deg, var(--gold), #b88f4a);
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;color:#111;padding:6px;
+      box-shadow:0 6px 18px rgba(214,183,111,0.12);
+    }
+    .brand h1{font-size:18px;margin:0}
+    .brand p{margin:0;font-size:12px;color:var(--muted)}
+
+    nav{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+    .nav-btn{
+      display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;
+      color:var(--accent);text-decoration:none;font-weight:600;font-size:14px;
+      background:transparent;border:0;cursor:pointer;
+    }
+    .nav-btn.active{background: linear-gradient(90deg, rgba(214,183,111,0.06), rgba(255,255,255,0.01));border-left:4px solid var(--gold);padding-left:8px}
+    .muted{color:var(--muted);font-size:13px}
+
+    .lang-select{display:flex;gap:8px;margin-top:18px}
+    .lang-select button{background:transparent;border:1px solid rgba(255,255,255,0.03);padding:8px;border-radius:8px;color:var(--muted);cursor:pointer}
+    .lang-select button.active{border-color:var(--gold);color:var(--accent);background:rgba(214,183,111,0.04)}
+
+    .theme-row{margin-top:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* ---------- Main area ---------- */
+    .main{
+      padding:24px;
+      min-height:80vh;
+    }
+    header.main-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .title{font-size:20px;font-weight:700;display:flex;flex-direction:column}
+    .title small{font-weight:500;color:var(--muted);font-size:12px}
+
+    /* ---------- Cards & lists ---------- */
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      padding:18px;border-radius:14px;margin-top:18px;border:1px solid rgba(255,255,255,0.03)
+    }
+
+    /* Citation list */
+    .search-row{display:flex;gap:12px;align-items:center}
+    .search-row input[type="search"]{
+      flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);
+      background:var(--card);color:var(--accent);outline:none;font-size:14px;
+    }
+    .controls{display:flex;gap:8px;align-items:center}
+
+    .quote{
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));
+      padding:14px;border-radius:12px;margin-bottom:12px;border:1px solid rgba(255,255,255,0.02);
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .quote .text{font-size:16px}
+    .quote .meta{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px}
+    .btn{
+      padding:8px 10px;border-radius:10px;border:0;background:transparent;color:var(--accent);cursor:pointer;font-weight:600
+    }
+    .btn.gold{background: linear-gradient(90deg, rgba(214,183,111,0.09), rgba(214,183,111,0.04));border:1px solid rgba(214,183,111,0.12);color:var(--gold)}
+    .center{text-align:center}
+
+    footer{margin-top:20px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* Responsive */
+    @media (max-width:900px){
+      .container{grid-template-columns:1fr;min-height:100vh}
+      .sidebar{display:flex;flex-direction:row;align-items:center;gap:12px;padding:12px}
+      nav{flex-direction:row;gap:6px;overflow:auto}
+      .lang-select{display:none}
+      body{padding:12px}
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container" aria-live="polite">
+    <aside class="sidebar" role="navigation" aria-label="Navigation">
+      <div class="brand">
+        <div class="logo">LL</div>
+        <div>
+          <h1>Lo Lérr</h1>
+          <p class="muted">كنز العلم — Treasure of Knowledge</p>
+        </div>
+      </div>
+
+      <nav aria-label="Main">
+        <button class="nav-btn active" data-page="home" id="nav-home">🏠 Accueil</button>
+        <button class="nav-btn" data-page="quotes" id="nav-quotes">💬 Citations</button>
+        <button class="nav-btn" data-page="about" id="nav-about">📖 À propos</button>
+        <button class="nav-btn" data-page="contact" id="nav-contact">📞 Contact</button>
+      </nav>
+
+      <div class="lang-select" role="tablist" aria-label="Langues">
+        <button data-lang="fr" class="active" aria-pressed="true">FR</button>
+        <button data-lang="ar" aria-pressed="false">AR</button>
+        <button data-lang="en" aria-pressed="false">EN</button>
+      </div>
+
+      <div class="theme-row">
+        <div class="small">Thème</div>
+        <button id="toggle-theme" class="btn">Sombre</button>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <div class="small center muted card" style="margin-top:12px">
+        <div style="font-size:13px">Lo Lérr © <span id="year"></span></div>
+        <div style="font-size:12px;margin-top:6px">Une bibliothèque multilingue d'inspiration</div>
+      </div>
+    </aside>
+
+    <main class="main" id="main">
+      <!-- HOME -->
+      <section id="page-home" class="page" data-page="home">
+        <header class="main-header">
+          <div class="title">
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:22px">Lo Lérr — كنز العلم</span>
+              <span class="muted" style="font-size:12px;padding:6px;background:var(--glass);border-radius:8px">Sombre • FR/AR/EN</span>
+            </div>
+            <small id="tagline" class="muted">Un trésor de citations et de savoir — multilingue et mobile-ready.</small>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center">
+            <button id="random-quote-btn" class="btn gold">→ Citation aléatoire</button>
+          </div>
+        </header>
+
+        <div class="card">
+          <h2 style="margin:0 0 8px 0">Bienvenue</h2>
+          <p class="muted">Lo Lérr est conçu pour partager la sagesse à travers les langues. Utilise l'onglet <strong>Citations</strong> pour explorer, chercher ou obtenir une citation aléatoire. Le site est optimisé pour mobile.</p>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div class="card">
+              <h3 style="margin-top:0">Multilingue</h3>
+              <p class="muted">Basculer entre français, arabe et anglais, et voir le contenu adapté.</p>
+            </div>
+            <div class="card">
+              <h3 style="margin-top:0">Chercher & Partager</h3>
+              <p class="muted">Cherche par mot-clé, auteur, ou langue. Partage facilement une citation.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- QUOTES -->
+      <section id="page-quotes" class="page" data-page="quotes" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <h2 style="margin:0">Citations</h2>
+            <div class="muted" id="quotes-sub">Parcourez la bibliothèque</div>
+          </div>
+          <div class="controls">
+            <select id="filter-lang" class="btn" title="Filtrer par langue">
+              <option value="all">Toutes les langues</option>
+              <option value="fr">Français</option>
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+            </select>
+            <button id="clear-search" class="btn">Effacer</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="search-row">
+            <input type="search" id="search" placeholder="Rechercher une citation, auteur ou mot-clé..." aria-label="Rechercher">
+            <button id="search-btn" class="btn">Chercher</button>
+          </div>
+
+          <div id="quotes-list" style="margin-top:16px"></div>
+
+          <div id="pager" class="muted" style="margin-top:6px;display:flex;justify-content:center;gap:8px"></div>
+        </div>
+      </section>
+
+      <!-- ABOUT -->
+      <section id="page-about" class="page" data-page="about" style="display:none">
+        <div class="card">
+          <h2>À propos</h2>
+          <p class="muted">Lo Lérr — كنز العلم est une plateforme dédiée au partage de la sagesse. Son objectif est de rassembler des citations et des enseignements accessibles en plusieurs langues, sous un design élégant et respectueux.</p>
+
+          <h3>Mission</h3>
+          <p class="muted">Permettre à chacun d'accéder à des paroles inspirantes, de les rechercher, les sauvegarder et les partager facilement.</p>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section id="page-contact" class="page" data-page="contact" style="display:none">
+        <div class="card">
+          <h2>Contact</h2>
+          <p class="muted">Envoie-nous un message. Le formulaire utilise Formspree (ou configure ton backend).</p>
+
+          <form id="contact-form" action="https://formspree.io/f/your-form-id" method="POST">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <input name="name" placeholder="Nom" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:var(--card);color:var(--accent)">
+              <input name="email" type="email" placeholder="Email" required style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:var(--card);color:var(--accent)">
+            </div>
+            <textarea name="message" placeholder="Ton message..." required style="width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:var(--card);color:var(--accent);min-height:120px"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+              <div class="muted small">Nous répondrons dès que possible.</div>
+              <button type="submit" class="btn gold">Envoyer</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <footer>
+        <div class="muted">Créé avec ❤️ pour la connaissance — Lo Lérr</div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+  /* ============================================================
+     FRONTEND JS: Routing, Multilingual, Quotes, Search, Random
+     - Data source: built-in `CITATIONS` variable (small sample)
+     - If you host an API, change `loadCitations()` to fetch /api/citations
+     ============================================================ */
+
+  // ---------- Sample citations (small set). You can replace with a larger `citations.json`. ----------
+  const CITATIONS = [
+    // french
+    { id:1, lang:"fr", text:"Le savoir est une lumière qui éclaire le chemin.", author:"Proverbe", tags:["savoir","lumiere"] },
+    { id:2, lang:"fr", text:"La dignité humaine commence par la connaissance de soi.", author:"Anonyme", tags:["dignité"] },
+    // arabic
+    { id:3, lang:"ar", text:"العلم نور يهدينا في دروب الحياة.", author:"مثل عربي", tags:["علم","نور"] },
+    { id:4, lang:"ar", text:"الكرامة تبدأ من معرفة النفس.", author:"غير معروف", tags:["كرامة"] },
+    // english
+    { id:5, lang:"en", text:"Knowledge is the lamp that illuminates our path.", author:"Proverb", tags:["knowledge"] },
+    { id:6, lang:"en", text:"Human dignity begins with self-knowledge.", author:"Unknown", tags:["dignity"] },
+
+    // a few more samples
+    { id:7, lang:"fr", text:"Lire, c’est voyager sans bouger.", author:"Anonyme", tags:["lecture"] },
+    { id:8, lang:"en", text:"To read is to travel without moving.", author:"Anonymous", tags:["reading"] },
+    { id:9, lang:"ar", text:"القراءة رحلة بلا سفر.", author:"مجهول", tags:["قراءة"] }
+  ];
+
+  // ---------- App state ----------
+  const state = {
+    page: 'home',
+    lang: 'fr',
+    perPage: 6,
+    citations: [],
+    filtered: [],
+    pageIndex: 0,
+  };
+
+  // ---------- Utilities ----------
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ---------- Load citations (local by default; change to fetch('/api/citations') if backend) ----------
+  async function loadCitations(){
+    // If you want to load a file "citations.json" placed next to index.html, uncomment next line:
+    // const res = await fetch('citations.json'); state.citations = await res.json();
+    state.citations = CITATIONS; // built-in
+    state.filtered = state.citations.slice();
+  }
+
+  // ---------- Rendering ----------
+  function setActiveNav(page){
+    $$('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.page===page));
+    $$('.page').forEach(p => p.style.display = (p.dataset.page===page) ? '' : 'none');
+    state.page = page;
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function renderQuotesList(){
+    const container = $('#quotes-list');
+    container.innerHTML = '';
+
+    const start = state.pageIndex * state.perPage;
+    const list = state.filtered.slice(start, start + state.perPage);
+
+    if(list.length === 0){
+      container.innerHTML = '<div class="muted center">Aucune citation trouvée.</div>';
+      $('#pager').innerHTML = '';
+      return;
+    }
+
+    for(const q of list){
+      const div = document.createElement('div');
+      div.className = 'quote';
+      div.innerHTML = `
+        <div class="text">${escapeHtml(q.text)}</div>
+        <div class="meta">
+          <div>${escapeHtml(q.author || '')} • <span class="muted">${q.lang.toUpperCase()}</span></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" data-id="${q.id}" data-action="copy">Copier</button>
+            <button class="btn" data-id="${q.id}" data-action="share">Partager</button>
+            <button class="btn gold" data-id="${q.id}" data-action="save">Sauvegarder</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    renderPager();
+  }
+
+  function renderPager(){
+    const pager = $('#pager');
+    const total = state.filtered.length;
+    const pages = Math.ceil(total / state.perPage);
+    if(pages <= 1){ pager.innerHTML = ''; return; }
+    let html = '';
+    for(let i=0;i<pages;i++){
+      html += `<button class="btn ${i===state.pageIndex ? 'gold' : ''}" data-page="${i}">${i+1}</button>`;
+    }
+    pager.innerHTML = html;
+  }
+
+  // ---------- Search & Filter ----------
+  function applyFilters(){
+    const q = $('#search').value.trim().toLowerCase();
+    const lang = $('#filter-lang').value;
+    state.filtered = state.citations.filter(c => {
+      if(lang !== 'all' && c.lang !== lang) return false;
+      if(!q) return true;
+      // check text, author, tags
+      if(c.text.toLowerCase().includes(q)) return true;
+      if((c.author || '').toLowerCase().includes(q)) return true;
+      if((c.tags||[]).some(t => t.toLowerCase().includes(q))) return true;
+      return false;
+    });
+    state.pageIndex = 0;
+    renderQuotesList();
+  }
+
+  // ---------- Random ----------
+  function showRandom(){
+    if(state.citations.length === 0) return;
+    const idx = Math.floor(Math.random()*state.citations.length);
+    const q = state.citations[idx];
+    // Show on Quotes page and scroll
+    setActiveNav('quotes');
+    $('#search').value = '';
+    $('#filter-lang').value = 'all';
+    state.filtered = state.citations.slice();
+    state.pageIndex = Math.floor(idx / state.perPage);
+    renderQuotesList();
+    // Highlight the specific quote (simple scroll)
+    setTimeout(()=> {
+      const el = document.querySelector(`[data-action="copy"][data-id="${q.id}"]`);
+      if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+    },250);
+  }
+
+  // ---------- Helpers ----------
+  function escapeHtml(s){
+    return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+  }
+
+  // ---------- Copy / Share / Save handlers ----------
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const id = btn.dataset.id;
+    const action = btn.dataset.action;
+
+    if(btn.id === 'random-quote-btn') { showRandom(); return; }
+    if(btn.id === 'search-btn') { applyFilters(); return; }
+    if(btn.id === 'clear-search'){ $('#search').value=''; $('#filter-lang').value='all'; applyFilters(); return; }
+    if(btn.id === 'toggle-theme'){ /* placeholder for theme toggle */ alert('Thème : sombre activé.'); return; }
+
+    if(btn.dataset.page !== undefined){
+      setActiveNav(btn.dataset.page);
+      return;
+    }
+
+    if(action && id){
+      const q = state.citations.find(x => String(x.id) === String(id));
+      if(!q) return;
+      if(action==='copy'){ navigator.clipboard?.writeText(`${q.text} — ${q.author || ''}`).then(()=> alert('Citation copiée !')); }
+      if(action==='share'){
+        if(navigator.share){
+          navigator.share({title:'Citation',text:q.text + ' — ' + (q.author||'' )}).catch(()=>{/*ignore*/});
+        }else{
+          alert('Partage non supporté sur ce navigateur. Copie la citation manuellement.');
+        }
+      }
+      if(action==='save'){
+        const saved = JSON.parse(localStorage.getItem('lolerr_saved') || '[]');
+        if(saved.some(s=>s.id===q.id)) { alert('Déjà sauvegardée'); return; }
+        saved.push(q);
+        localStorage.setItem('lolerr_saved', JSON.stringify(saved));
+        alert('Citation sauvegardée localement.');
+      }
+    }
+
+    // pager buttons
+    if(btn.parentElement && btn.parentElement.id==='pager'){
+      const page = Number(btn.dataset.page);
+      if(!isNaN(page)){ state.pageIndex = page; renderQuotesList(); }
+    }
+  });
+
+  // ---------- Language switching ----------
+  $$('.lang-select button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      $$('.lang-select button').for
