@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كنز العلم - Kanz Alilm</title>
+<style>
+/* Corps et fond doré */
+body {
+    font-family: Arial,sans-serif;
+    margin:0;
+    padding:0;
+    background: linear-gradient(135deg, #FFD700, #FFEC8B);
+    color:#333;
+    transition:0.3s;
+}
+body.dark {
+    background: linear-gradient(135deg, #B8860B, #FFD700);
+    color:#fff;
+}
+
+.container {max-width:600px;margin:auto;padding:1rem;}
+header {display:flex;justify-content:space-between;align-items:center;}
+button {cursor:pointer;padding:0.5rem 1rem;margin:0.2rem;border:none;border-radius:8px;background:#4CAF50;color:white;transition:0.2s;}
+button:hover {transform:scale(1.05);}
+
+#quote-box {
+    background: rgba(255,255,255,0.85);
+    padding:1rem;
+    border-radius:10px;
+    text-align:center;
+    margin-top:1rem;
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+}
+body.dark #quote-box {background: rgba(0,0,0,0.6);}
+
+.navigation, .filters, .quiz, .admin, .add-quote {margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.5rem;}
+input, select, textarea {padding:0.5rem; border-radius:5px; border:1px solid #ccc; flex:1;}
+textarea {width:100%; resize:none;}
+#admin-panel {display:none; flex-direction:column; gap:0.5rem;}
+.quiz input {flex:2;}
+.badge {background:#ff0; padding:0.2rem 0.5rem; border-radius:5px; margin-left:0.3rem;}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>كنز العلم</h1>
+<button id="toggle-theme">🌙/☀️</button>
+</header>
+
+<main>
+<div id="quote-box">
+<p id="quote-text">Chargement...</p>
+<p id="quote-author"></p>
+<button id="like-btn">💙 <span id="like-count">0</span></button>
+</div>
+
+<div class="navigation">
+<button id="prev">Précédent</button>
+<button id="next">Suivant</button>
+</div>
+
+<div class="filters">
+<select id="theme-filter">
+<option value="">Tous les thèmes</option>
+<option value="politique">Politique</option>
+<option value="économique">Économique</option>
+<option value="sociale">Sociale</option>
+<option value="solidaire">Solidaire</option>
+<option value="religieux">Religieux</option>
+<option value="philosophie">Philosophie</option>
+<option value="motivations">Motivations</option>
+</select>
+
+<select id="lang-filter">
+<option value="fr">Français</option>
+<option value="ar">Arabe</option>
+<option value="en">Anglais</option>
+</select>
+
+<input type="text" id="search-input" placeholder="Recherche...">
+</div>
+
+<div class="quiz">
+<h3>Quiz : Qui est l’auteur ?</h3>
+<p id="quiz-question"></p>
+<input type="text" id="quiz-answer" placeholder="Nom de l'auteur">
+<button id="quiz-submit">Valider</button>
+<p id="quiz-result"></p>
+</div>
+
+<div class="add-quote">
+<h3>Ajouter une citation (max 200 mots)</h3>
+<textarea id="new-quote-text" rows="3" placeholder="Texte de la citation"></textarea>
+<input type="text" id="new-quote-author" placeholder="Auteur">
+<select id="new-quote-theme">
+<option value="politique">Politique</option>
+<option value="économique">Économique</option>
+<option value="sociale">Sociale</option>
+<option value="solidaire">Solidaire</option>
+<option value="religieux">Religieux</option>
+<option value="philosophie">Philosophie</option>
+<option value="motivations">Motivations</option>
+</select>
+<button id="add-quote-btn">Ajouter</button>
+<p id="add-quote-msg"></p>
+</div>
+
+<div class="admin">
+<h3>Admin Panel</h3>
+<input type="password" id="admin-code" placeholder="Code secret">
+<button id="admin-login">Login</button>
+<div id="admin-panel">
+<h4>Gérer les citations</h4>
+<p>Ajouter, modifier, supprimer</p>
+</div>
+<p id="admin-msg"></p>
+</div>
+
+</main>
+</div>
+
+<script>
+// 10 citations exemple (à compléter jusqu'à 150)
+let quotes = [
+{id:1,text:{fr:"Le savoir est la lumière de l'âme.",ar:"العلم نور للروح.",en:"Knowledge is the light of the soul."},author:"Anonyme",theme:"philosophie",likes:0},
+{id:2,text:{fr:"La liberté commence où l’ignorance finit.",ar:"الحرية تبدأ حيث ينتهي الجهل.",en:"Freedom begins where ignorance ends."},author:"Victor Hugo",theme:"politique",likes:0},
+{id:3,text:{fr:"Agis toujours de façon à augmenter le nombre de choix.",ar:"تصرف دائمًا لزيادة عدد الخيارات.",en:"Always act to increase the number of choices."},author:"R. Buckminster Fuller",theme:"motivations",likes:0},
+{id:4,text:{fr:"L’éducation est l’arme la plus puissante.",ar:"التعليم هو أقوى سلاح.",en:"Education is the most powerful weapon."},author:"Nelson Mandela",theme:"sociale",likes:0},
+{id:5,text:{fr:"Il n’y a pas de raccourci vers n’importe où qui en vaille la peine.",ar:"لا يوجد اختصار لأي مكان يستحق الذهاب.",en:"There is no shortcut to anywhere worth going."},author:"Beverly Sills",theme:"motivations",likes:0},
+{id:6,text:{fr:"La connaissance s’acquiert par l’expérience.",ar:"المعرفة تُكتسب بالتجربة.",en:"Knowledge is acquired through experience."},author:"Albert Einstein",theme:"philosophie",likes:0},
+{id:7,text:{fr:"Ne fais pas aux autres ce que tu ne veux pas qu’on te fasse.",ar:"لا تفعل للآخرين ما لا تريد أن يُفعل لك.",en:"Do not do to others what you do not want done to yourself."},author:"Proverbe",theme:"religieux",likes:0},
+{id:8,text:{fr:"Le succès n’est pas final, l’échec n’est pas fatal.",ar:"النجاح ليس نهائيًا، والفشل ليس قاتلاً.",en:"Success is not final, failure is not fatal."},author:"Winston Churchill",theme:"motivations",likes:0},
+{id:9,text:{fr:"L’économie doit servir l’homme et non l’inverse.",ar:"يجب أن تخدم الاقتصاد الإنسان وليس العكس.",en:"The economy must serve man, not the reverse."},author:"John Maynard Keynes",theme:"économique",likes:0},
+{id:10,text:{fr:"La solidarité est le chemin du progrès.",ar:"التضامن هو طريق التقدم.",en:"Solidarity is the path to progress."},author:"Anonyme",theme:"solidaire",likes:0}
+];
+
+let currentIndex=0;
+const LOCAL_LIKES_KEY='kanz_likes';
+let likes=JSON.parse(localStorage.getItem(LOCAL_LIKES_KEY))||{};
+
+const quoteText=document.getElementById('quote-text');
+const quoteAuthor=document.getElementById('quote-author');
+const likeBtn=document.getElementById('like-btn');
+const likeCount=document.getElementById('like-count');
+const prevBtn=document.getElementById('prev');
+const nextBtn=document.getElementById('next');
+const themeFilter=document.getElementById('theme-filter');
+const langFilter=document.getElementById('lang-filter');
+const searchInput=document.getElementById('search-input');
+const toggleTheme=document.getElementById('toggle-theme');
+
+// Quiz
+const quizQuestion=document.getElementById('quiz-question');
+const quizAnswer=document.getElementById('quiz-answer');
+const quizSubmit=document.getElementById('quiz-submit');
+const quizResult=document.getElementById('quiz-result');
+
+// Add quote
+const newQuoteText=document.getElementById('new-quote-text');
+const newQuoteAuthor=document.getElementById('new-quote-author');
+const newQuoteTheme=document.getElementById('new-quote-theme');
+const addQuoteBtn=document.getElementById('add-quote-btn');
+const addQuoteMsg=document.getElementById('add-quote-msg');
+
+// Admin
+const adminCode=document.getElementById('admin-code');
+const adminLogin=document.getElementById('admin-login');
+const adminPanel=document.getElementById('admin-panel');
+const adminMsg=document.getElementById('admin-msg');
+
+function filterQuotes(){
+    const theme=themeFilter.value;
+    const search=searchInput.value.toLowerCase();
+    return quotes.filter(q=>{
+        const matchTheme=!theme || q.theme===theme;
+        const matchSearch=!search || q.text[langFilter.value].toLowerCase().includes(search) || q.author.toLowerCase().includes(search);
+        return matchTheme && matchSearch;
+    });
+}
+
+function renderQuote(){
+    const filtered=filterQuotes();
+    if(filtered.length===0){
+        quoteText.textContent="Aucune citation trouvée.";
+        quoteAuthor.textContent="";
+        likeCount.textContent="0";
+        quizQuestion.textContent="";
+        return;
+    }
+    if(currentIndex>=filtered.length) currentIndex=0;
+    const q=filtered[currentIndex];
+    quoteText.textContent=q.text[langFilter.value];
+    quoteAuthor.textContent=q.author;
+    likeCount.textContent=likes[q.id]||q.likes;
+
+    // Quiz
+    quizQuestion.textContent=q.text[langFilter.value];
+    quizAnswer.value="";
+    quizResult.textContent="";
+}
+
+likeBtn.addEventListener('click',()=>{
+    const filtered=filterQuotes();
+    const q=filtered[currentIndex];
+    likes[q.id]=(likes[q.id]||q.likes)+1;
+    localStorage.setItem(LOCAL_LIKES_KEY,JSON.stringify(likes));
+    likeCount.textContent=likes[q.id];
+});
+
+prevBtn.addEventListener('click',()=>{
+    currentIndex--;
+    if(currentIndex<0) currentIndex=filterQuotes().length-1;
+    renderQuote();
+});
+nextBtn.addEventListener('click',()=>{
+    currentIndex++;
+    if(currentIndex>=filterQuotes().length) currentIndex=0;
+    renderQuote();
+});
+
+themeFilter.addEventListener('change',()=>{currentIndex=0; renderQuote();});
+langFilter.addEventListener('change',renderQuote);
+searchInput.addEventListener('input',()=>{currentIndex=0; renderQuote();});
+toggleTheme.addEventListener('click',()=>{document.body.classList.toggle('dark');});
+
+// Quiz
+quizSubmit.addEventListener('click',()=>{
+    const answer=quizAnswer.value.trim().toLowerCase();
+    const filtered=filterQuotes();
+    const q=filtered[currentIndex];
+    if(answer===q.author.toLowerCase()){
+        quizResult.textContent="🎉 Félicitations !";
+    } else {
+        quizResult.textContent="😢 Désolé, la bonne réponse était : "+q.author;
+    }
+});
+
+// Add quote
+addQuoteBtn.addEventListener('click',()=>{
+    const text=newQuoteText.value.trim();
+    const author=newQuoteAuthor.value.trim();
+    const theme=newQuoteTheme.value;
+    if(!text||!author){addQuoteMsg.textContent="Veuillez remplir tous les champs."; return;}
+    const id=quotes.length+1;
+    const q={id,text:{fr:text,ar:text,en:text},author,theme,likes:0};
+    quotes.push(q);
+    addQuoteMsg.textContent="Citation ajoutée !";
+    newQuoteText.value=""; newQuoteAuthor.value="";
+    renderQuote();
+});
+
+// Admin
+adminLogin.addEventListener('click',()=>{
+    if(adminCode.value==="2200"){adminPanel.style.display="flex"; adminMsg.textContent="Connecté";}
+    else adminMsg.textContent="Code incorrect";
+});
+
+renderQuote();
+</script>
+</body>
+</html>
